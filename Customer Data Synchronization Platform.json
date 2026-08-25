@@ -1,0 +1,456 @@
+{
+  "name": "Customer Data Synchronization Platform",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "7ea3efb2-6bce-489a-b39f-0235d08288cd",
+      "name": "Start Sync",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mock API session data — note messy email casing/whitespace\nconst apiData = [\n  { email: '  Alice@Example.COM ', deviceType: 'mobile',  lastActive: '2026-08-20' },\n  { email: 'bob@example.com',      deviceType: 'desktop', lastActive: '2026-08-22' },\n  { email: 'Carol@Example.com ',   deviceType: 'tablet',  lastActive: '2026-08-19' },\n  { email: ' dave@example.com',    deviceType: '',        lastActive: '2026-08-24' },\n  { email: 'EVE@example.com',      deviceType: 'mobile',  lastActive: '' },\n];\nreturn apiData.map((r) => ({ json: r }));"
+      },
+      "id": "49986d37-df4b-4abf-a7f2-3f7627201cfb",
+      "name": "API_SessionData",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "email",
+              "name": "email",
+              "type": "string",
+              "value": "={{ ($json.email || \"\").trim().toLowerCase() }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "4cf5548b-5a1c-43bd-a2c7-b25251bbd997",
+      "name": "Normalize_APIEmail",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "email",
+        "joinMode": "keepEverything",
+        "options": {
+          "multipleMatches": "first"
+        }
+      },
+      "id": "ce41fdff-9cc1-4373-9e2a-854e2d2d4d10",
+      "name": "MERGE_APIDatabase",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        672,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mock database customer profiles\nconst dbData = [\n  { email: 'alice@example.com', firstName: 'Alice', lastName: 'Anderson', preferredLanguage: 'en' },\n  { email: ' Bob@Example.com',  firstName: 'Bob',   lastName: 'Brown',    preferredLanguage: '' },\n  { email: 'dave@example.com',  firstName: 'Dave',  lastName: 'Davis',    preferredLanguage: 'fr' },\n  { email: 'eve@EXAMPLE.com ',  firstName: 'Eve',   lastName: 'Evans',    preferredLanguage: 'de' },\n  { email: 'frank@example.com', firstName: 'Frank', lastName: 'Foster',   preferredLanguage: 'es' },\n];\nreturn dbData.map((r) => ({ json: r }));"
+      },
+      "id": "3e8d536a-f346-46ef-b92c-765a760b3a26",
+      "name": "DB_CustomerProfiles",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "email",
+              "name": "email",
+              "type": "string",
+              "value": "={{ ($json.email || \"\").trim().toLowerCase() }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "1967e78d-c3bf-42e3-8ca2-8f9fbafda8f5",
+      "name": "Normalize_DBEmail",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mock spreadsheet marketing preferences\nconst sheetData = [\n  { email: 'alice@example.com',  marketingOptIn: true },\n  { email: 'BOB@example.com ',   marketingOptIn: false },\n  { email: ' carol@example.com', marketingOptIn: true },\n  { email: 'dave@example.com',   marketingOptIn: true },\n  { email: 'eve@example.com',    marketingOptIn: false },\n];\nreturn sheetData.map((r) => ({ json: r }));"
+      },
+      "id": "91316142-095c-4e40-8f92-a29ab101446a",
+      "name": "Sheet_MarketingPrefs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "email",
+              "name": "email",
+              "type": "string",
+              "value": "={{ ($json.email || \"\").trim().toLowerCase() }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "23d5be37-6e51-4e9f-9651-329db6c6630d",
+      "name": "Normalize_SheetEmail",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        672,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "email",
+        "joinMode": "keepEverything",
+        "options": {
+          "multipleMatches": "first"
+        }
+      },
+      "id": "3769895f-7fa3-49c9-9139-677b09804b9d",
+      "name": "MERGE_MarketingSheet",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        896,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "email",
+              "name": "email",
+              "type": "string",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "id": "fullName",
+              "name": "fullName",
+              "type": "string",
+              "value": "={{ (($json.firstName || \"\") + \" \" + ($json.lastName || \"\")).trim() }}"
+            },
+            {
+              "id": "deviceType",
+              "name": "deviceType",
+              "type": "string",
+              "value": "={{ $json.deviceType || \"unknown\" }}"
+            },
+            {
+              "id": "lastActive",
+              "name": "lastActive",
+              "type": "string",
+              "value": "={{ $json.lastActive || \"not_available\" }}"
+            },
+            {
+              "id": "marketingOptIn",
+              "name": "marketingOptIn",
+              "type": "boolean",
+              "value": "={{ $json.marketingOptIn === undefined ? false : $json.marketingOptIn }}"
+            },
+            {
+              "id": "preferredLanguage",
+              "name": "preferredLanguage",
+              "type": "string",
+              "value": "={{ $json.preferredLanguage || \"en\" }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6573b7ca-c440-43cb-9fb3-22113abd8b75",
+      "name": "CLEAN_CoalesceFields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1120,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fullname-check",
+              "leftValue": "={{ $json.fullName }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e9eb1cd6-e4e1-4d26-90fa-3db74d894e57",
+      "name": "IF_HasFullName",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "status",
+              "name": "syncStatus",
+              "type": "string",
+              "value": "unified"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "579507db-24b9-4c82-921d-49094c9a27e0",
+      "name": "OUTPUT_UnifiedCustomerProfiles",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1568,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "status",
+              "name": "syncStatus",
+              "type": "string",
+              "value": "quarantined"
+            },
+            {
+              "id": "reason",
+              "name": "quarantineReason",
+              "type": "string",
+              "value": "Missing fullName — no matching database profile"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "8b2ddc77-4b9e-47a6-b68f-fadeedad4456",
+      "name": "Quarantine_UnmatchedProfiles",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1568,
+        288
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start Sync": {
+      "main": [
+        [
+          {
+            "node": "API_SessionData",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "DB_CustomerProfiles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sheet_MarketingPrefs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API_SessionData": {
+      "main": [
+        [
+          {
+            "node": "Normalize_APIEmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize_APIEmail": {
+      "main": [
+        [
+          {
+            "node": "MERGE_APIDatabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MERGE_APIDatabase": {
+      "main": [
+        [
+          {
+            "node": "MERGE_MarketingSheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB_CustomerProfiles": {
+      "main": [
+        [
+          {
+            "node": "Normalize_DBEmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize_DBEmail": {
+      "main": [
+        [
+          {
+            "node": "MERGE_APIDatabase",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Sheet_MarketingPrefs": {
+      "main": [
+        [
+          {
+            "node": "Normalize_SheetEmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize_SheetEmail": {
+      "main": [
+        [
+          {
+            "node": "MERGE_MarketingSheet",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "MERGE_MarketingSheet": {
+      "main": [
+        [
+          {
+            "node": "CLEAN_CoalesceFields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CLEAN_CoalesceFields": {
+      "main": [
+        [
+          {
+            "node": "IF_HasFullName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF_HasFullName": {
+      "main": [
+        [
+          {
+            "node": "OUTPUT_UnifiedCustomerProfiles",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Quarantine_UnmatchedProfiles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "41a6c4f2-b31e-4644-9422-91c365bac109",
+  "meta": {
+    "instanceId": "201381d913fa9e78389f7093cb99cedc70c766251a500f897db19feccfda3bd0"
+  },
+  "nodeGroups": [],
+  "id": "5RkqLgMRtC4182zI",
+  "tags": []
+}
